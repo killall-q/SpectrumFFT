@@ -10,7 +10,7 @@ function Initialize()
         SKIN:Bang('!Refresh')
         return
     end
-    SKIN:Bang('[!SetOption AttackSlider X '..(68 + tonumber(SKIN:GetVariable('Attack')) * 0.09)..'][!SetOption DecaySlider X '..(62 + tonumber(SKIN:GetVariable('Decay')) * 0.09)..'][!SetOption LevelMinSlider X '..(128 + tonumber(SKIN:GetVariable('LevelMin')) * 90)..'][!SetOption LevelMaxSlider X '..(128 + tonumber(SKIN:GetVariable('LevelMax')) * 90)..'][!SetOption SensSlider X '..(95 + tonumber(SKIN:GetVariable('Sens')) * 0.9)..']')
+    SKIN:Bang('[!SetOption AttackSlider X '..(68 + tonumber(SKIN:GetVariable('Attack')) * 0.09)..'][!SetOption DecaySlider X '..(62 + tonumber(SKIN:GetVariable('Decay')) * 0.09)..'][!SetOption LevelRange X '..(130 + levelMin * 95)..'][!SetOption LevelRange W '..(levelRange * 95)..'][!SetOption LevelMinSlider X '..(128 + levelMin * 95)..'][!SetOption LevelMaxSlider X '..(128 + (levelMin + levelRange) * 95)..'][!SetOption SensSlider X '..(95 + tonumber(SKIN:GetVariable('Sens')) * 0.9)..']')
     for i = 0, bands - 1 do
         mFFT[i] = SKIN:GetMeasure('mFFT'..i)
     end
@@ -110,12 +110,12 @@ function SetLevel(n, m)
     local limit = m * 0.02 < level.Min + level.Max and 'Min' or 'Max'
     local val
     if n == 0 then
-        val = math.floor(m * 0.22) * 0.05
+        val = math.floor(m * 0.21) * 0.05
     elseif level[limit] + n >= 0 and level[limit] + n <= 1 then
         val = math.floor((level[limit] + n) * 20 + 0.5) * 0.05
     end
-    if (limit == 'Min' and val >= level.Max - 0.01) or (limit == 'Max' and level.Min + 0.01 >= val) then return end
-    SKIN:GetMeter('Level'..limit..'Slider'):SetX(128 + val * 90)
+    if (limit == 'Min' and level.Max - 0.01 <= val) or (limit == 'Max' and val <= level.Min + 0.01) then return end
+    SKIN:GetMeter('Level'..limit..'Slider'):SetX(128 + val * 95)
     SKIN:Bang('[!SetOption Level'..limit..'Val Text '..string.format('%.2f', val)..'][!WriteKeyValue Variables Level'..limit..' '..string.format('%.2f', val)..' "#@#Settings.inc"]')
     if limit == 'Min' then
         levelMin = val
@@ -123,6 +123,9 @@ function SetLevel(n, m)
     else
         levelRange = val - levelMin
     end
+    local range = SKIN:GetMeter('LevelRange')
+    range:SetX(130 + levelMin * 95)
+    range:SetW(levelRange * 95)
 end
 
 function SetSens(n, m)
