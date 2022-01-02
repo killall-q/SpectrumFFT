@@ -6,9 +6,10 @@ LevelMax=0.85
 Sens=100
 Channel=Sum
 Bands=128
-BandW=30
-BandL=4
-MaskW=5
+BandH=30
+BandW=3
+MaskH=5
 ShowSet=
 
-BGColor=000000
+Preset=Lava
+ColorBG=000000

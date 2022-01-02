@@ -3,6 +3,7 @@ function Initialize()
     bands = tonumber(SKIN:GetVariable('Bands')) -- number of FFT bands
     levelMin = tonumber(SKIN:GetVariable('LevelMin'))
     levelRange = tonumber(SKIN:GetVariable('LevelMax')) - levelMin
+    scroll = 0 -- preset selection list scroll position
     lock = false -- lock hiding of mouseover controls
     if not SKIN:GetMeter('B1') then
         GenMeasures()
@@ -11,53 +12,41 @@ function Initialize()
         return
     end
     SKIN:Bang('[!SetOption AttackSlider X '..(68 + tonumber(SKIN:GetVariable('Attack')) * 0.09)..'][!SetOption DecaySlider X '..(62 + tonumber(SKIN:GetVariable('Decay')) * 0.09)..'][!SetOption LevelRange X '..(130 + levelMin * 95)..'][!SetOption LevelRange W '..(levelRange * 95)..'][!SetOption LevelMinSlider X '..(128 + levelMin * 95)..'][!SetOption LevelMaxSlider X '..(128 + (levelMin + levelRange) * 95)..'][!SetOption SensSlider X '..(95 + tonumber(SKIN:GetVariable('Sens')) * 0.9)..']')
-    for i = 0, bands - 1 do
-        mFFT[i] = SKIN:GetMeasure('mFFT'..i)
+    for b = 0, bands - 1 do
+        mFFT[b] = SKIN:GetMeasure('mFFT'..b)
     end
     os.remove(SKIN:GetVariable('@')..'Measures.inc')
     os.remove(SKIN:GetVariable('@')..'Meters.inc')
-    PrepMeters()
+    LoadPreset()
     SetChannel(SKIN:GetVariable('Channel'))
+    for b = 1, bands do
+        SKIN:Bang('[!SetOption B'..b..' SolidColor #Color'..(b - 1)..'#][!SetOption B'..b..' SolidColor2 #Color'..b..'#]')
+    end
+    SKIN:Bang('!SetOption B'..bands..' SolidColor2 0,0,0,0')
     if (SKIN:GetVariable('ShowSet') ~= '') then
-        SKIN:Bang('[!ShowMeterGroup Set][!WriteKeyValue Variables ShowSet "" "#@#Settings.inc"]')
-    else
-        ToggleSet(1)
+        ShowSettings()
+        SKIN:Bang('!WriteKeyValue Variables ShowSet "" "#@#Settings.inc"')
     end
 end
 
 function Update()
-    local FFTMin, FFTMax = 1, 0
-    for i = 0, bands - 1 do
-        local FFT = (mFFT[i]:GetValue() - levelMin) / levelRange
-        if FFT < 0 then
-            SKIN:Bang('!SetVariable Color'..i..' 0,0,0,0')
-        elseif FFT < 0.2 then
-            SKIN:Bang('!SetVariable Color'..i..' '..((FFT - 0.2) * -1275)..',0,255,'..(FFT * 1275))
-        elseif FFT < 0.4 then
-            SKIN:Bang('!SetVariable Color'..i..' 0,'..((FFT - 0.2) * 1275)..',255')
-        elseif FFT < 0.6 then
-            SKIN:Bang('!SetVariable Color'..i..' 0,255,'..((FFT - 0.6) * -1275))
-        elseif FFT < 0.8 then
-            SKIN:Bang('!SetVariable Color'..i..' '..((FFT - 0.6) * 1275)..',255,0')
-        else
-            SKIN:Bang('!SetVariable Color'..i..' 255,'..((FFT - 1) * -1275)..',0')
-        end
+    for b = 0, bands - 1 do
+        SKIN:Bang('!SetVariable Color'..b..' '..Preset((mFFT[b]:GetValue() - levelMin) / levelRange, b, bands))
     end
 end
 
-function HideControls()
-    if not lock then
-        SKIN:Bang('!HideMeter Cog')
-        ToggleSet(1)
-    end
+function ShowHover()
+    if SKIN:GetMeter('Handle'):GetW() > 0 then return end
+    SKIN:Bang('!SetOption Hover SolidColor 80808050')
 end
 
-function ToggleSet(n)
-    if n or SKIN:GetMeter('AttackLabel'):GetH() > 0 then
-        SKIN:Bang('[!HideMeterGroup Set][!SetOption AttackLabel Y -500][!UpdateMeter AttackLabel][!MoveMeter 83 -500 ChannelBG]')
-    else
-        SKIN:Bang('[!ShowMeterGroup Set][!SetOption AttackLabel Y 16R][!UpdateMeter AttackLabel][!MoveMeter 83 146 ChannelBG]')
-    end
+function ShowSettings()
+    SKIN:Bang('[!SetOption Handle W '..math.max(SKIN:GetMeter('BG'):GetW(), 270)..'][!MoveMeter 12 12 PresetLabel][!MoveMeter 66 12 PresetBG][!MoveMeter 83 61 ChannelBG][!ShowMeterGroup Set][!SetOption Hover SolidColor 00000001]')
+end
+
+function HideSettings()
+    if lock then return end
+    SKIN:Bang('[!MoveMeter 12 -300 PresetLabel][!MoveMeter 66 -300 PresetBG][!MoveMeter 83 -300 ChannelBG][!HideMeterGroup Set][!SetOption Hover SolidColor 00000001]')
 end
 
 function GenMeasures()
@@ -76,11 +65,33 @@ function GenMeters()
     file:close()
 end
 
-function PrepMeters()
-    for i = 1, bands do
-        SKIN:Bang('[!SetOption B'..i..' SolidColor #Color'..(i - 1)..'#][!SetOption B'..i..' SolidColor2 #Color'..i..'#]')
+function LoadPreset(n)
+    local file
+    if n then
+        file = SKIN:GetMeasure('mPreset'..n):GetStringValue()
+        SKIN:Bang('[!SetOption PresetSet Text "'..file..'"][!SetVariable Preset "'..file..'"][!WriteKeyValue Variables Preset "'..file..'" "#@#Settings.inc"]')
+    else
+        file = SKIN:GetVariable('Preset')
     end
-    SKIN:Bang('!SetOption B'..bands..' SolidColor2 0,0,0,0')
+    -- Create function from file
+    Preset = assert(loadfile(SKIN:GetVariable('@')..'Presets\\'..file..'.lua'))
+end
+
+function InitScroll()
+    presetCount = SKIN:GetMeasure('mPresetCount'):GetValue()
+    SKIN:GetMeter('PresetScroll'):SetH(math.min(148, 1216 / presetCount - 4))
+end
+
+function ScrollList(n, m)
+    if m then
+        local n = m * 0.01 > (scroll + 4) / presetCount and 1 or -1
+        for i = 1, 3 do
+            ScrollList(n)
+        end
+    elseif scroll + n >= 0 and scroll + n + 8 <= presetCount then
+        scroll = scroll + n
+        SKIN:Bang('[!SetOption PresetScroll Y '..(152 / (presetCount - 8) * (1 - 8 / presetCount) * scroll + 2)..'r][!UpdateMeter PresetScroll][!CommandMeasure mPreset1 Index'..(n > 0 and 'Down' or 'Up')..']')
+    end
 end
 
 function SetAttack(n, m)
@@ -108,7 +119,7 @@ end
 function SetLevel(n, m)
     local level = { Min = levelMin, Max = levelMin + levelRange }
     local limit = m * 0.02 < level.Min + level.Max and 'Min' or 'Max'
-    local val
+    local val = 0
     if n == 0 then
         val = math.floor(m * 0.21) * 0.05
     elseif level[limit] + n >= 0 and level[limit] + n <= 1 then
@@ -143,34 +154,47 @@ function SetChannel(n)
     local name = {[0]='Left','Right','Center','Subwoofer','Back Left','Back Right','Side Left','Side Right'}
     if n == 'Stereo' then
         -- Split bands between L and R channels
-        for i = 0, bands / 2 - 1 do
-            SKIN:Bang('!SetOption mFFT'..i..' Channel L')
+        for b = 0, bands / 2 - 1 do
+            SKIN:Bang('!SetOption mFFT'..b..' Channel L')
         end
-        for i = bands / 2, bands - 1 do
-            SKIN:Bang('[!SetOption mFFT'..i..' Channel R][!SetOption mFFT'..i..' BandIdx '..(bands - i)..']')
+        for b = bands / 2, bands - 1 do
+            SKIN:Bang('[!SetOption mFFT'..b..' Channel R][!SetOption mFFT'..b..' BandIdx '..(bands - b)..']')
         end
     else
         SKIN:Bang('!SetOptionGroup mFFT Channel '..n)
-        for i = bands / 2, bands - 1 do
-            SKIN:Bang('!SetOption mFFT'..i..' BandIdx '..i)
+        for b = bands / 2, bands - 1 do
+            SKIN:Bang('!SetOption mFFT'..b..' BandIdx '..b)
         end
     end
     SKIN:Bang('[!SetOption ChannelSet Text "'..(name[n] or n)..'"][!SetVariable Channel '..n..'][!WriteKeyValue Variables Channel '..n..' "#@#Settings.inc"]')
 end
 
 function SetBands()
-    local res = tonumber(SKIN:GetVariable('Input'))
+    lock = false
+    local res = tonumber(SKIN:GetVariable('Set'))
     if res and res > 0 then
         SKIN:Bang('[!WriteKeyValue Variables Bands '..res..' "#@#Settings.inc"][!WriteKeyValue Variables ShowSet 1 "#@#Settings.inc"][!Refresh]')
-    else
-        lock = false
     end
 end
 
 function SetBandSize(s)
-    local bandSize = tonumber(SKIN:GetVariable('Input'))
-    if bandSize and bandSize > 0 then
-        SKIN:Bang('[!SetOptionGroup P '..(s == 'W' and 'H' or 'W')..' "#Input#"][!SetOption Band'..s..'Set Text "#Input#"][!SetVariable Band'..s..' "#Input#"][!WriteKeyValue Variables Band'..s..' "#Input#" "#@#Settings.inc"][!UpdateMeterGroup Mask]')
-        lock = false
+    lock = false
+    local size = tonumber(SKIN:GetVariable('Set'))
+    if size and size > 0 then
+        SKIN:Bang('[!SetOptionGroup B '..s..' "#Set#"][!SetOption Band'..s..'Set Text "#Set#"][!SetVariable Band'..s..' "#Set#"][!WriteKeyValue Variables Band'..s..' "#Set#" "#@#Settings.inc"][!UpdateMeterGroup Mask]')
     end
+end
+
+function SetMaskH()
+    lock = false
+    local maskH = tonumber(SKIN:GetVariable('Set'))
+    if maskH and maskH > 0 then
+        SKIN:Bang('[!SetOption MaskHSet Text "#Set#"][!SetVariable MaskH "#Set#"][!WriteKeyValue Variables MaskH "#Set#" "#@#Settings.inc"][!UpdateMeterGroup Mask]')
+    end
+end
+
+function SetColor()
+    lock = false
+    if SKIN:GetVariable('Set') == '' then return end
+    SKIN:Bang('[!SetOptionGroup Mask SolidColor "#Set#"][!SetOption ColorBGSet Text "#Set#"][!SetVariable ColorBG "#Set#"][!WriteKeyValue Variables ColorBG "#Set#" "#@#Settings.inc"][!UpdateMeterGroup Mask]')
 end
