@@ -5,13 +5,13 @@ function Initialize()
     levelRange = tonumber(SKIN:GetVariable('LevelMax')) - levelMin
     scroll = 0 -- preset selection list scroll position
     lock = false -- lock hiding of mouseover controls
+    local showBG = tonumber(SKIN:GetVariable('ShowBG')) and true or false
     if not SKIN:GetMeter('B1') then
         GenMeasures()
         GenMeters()
         SKIN:Bang('!Refresh')
         return
     end
-    SKIN:Bang('[!SetOption AttackSlider X '..(68 + tonumber(SKIN:GetVariable('Attack')) * 0.09)..'][!SetOption DecaySlider X '..(62 + tonumber(SKIN:GetVariable('Decay')) * 0.09)..'][!SetOption LevelRange X '..(130 + levelMin * 95)..'][!SetOption LevelRange W '..(levelRange * 95)..'][!SetOption LevelMinSlider X '..(128 + levelMin * 95)..'][!SetOption LevelMaxSlider X '..(128 + (levelMin + levelRange) * 95)..'][!SetOption SensSlider X '..(95 + tonumber(SKIN:GetVariable('Sens')) * 0.9)..']')
     for b = 0, bands - 1 do
         mFFT[b] = SKIN:GetMeasure('mFFT'..b)
     end
@@ -19,11 +19,15 @@ function Initialize()
     os.remove(SKIN:GetVariable('@')..'Meters.inc')
     LoadPreset()
     SetChannel(SKIN:GetVariable('Channel'))
+    SetOrder(tonumber(SKIN:GetVariable('Order')), true)
     for b = 1, bands do
         SKIN:Bang('[!SetOption B'..b..' SolidColor #Color'..(b - 1)..'#][!SetOption B'..b..' SolidColor2 #Color'..b..'#]')
     end
-    SKIN:Bang('!SetOption B'..bands..' SolidColor2 0,0,0,0')
-    if (SKIN:GetVariable('ShowSet') ~= '') then
+    SKIN:Bang('[!SetOption B'..bands..' SolidColor2 0,0,0,0][!SetOption AttackSlider X '..(68 + tonumber(SKIN:GetVariable('Attack')) * 0.09)..'][!SetOption DecaySlider X '..(62 + tonumber(SKIN:GetVariable('Decay')) * 0.09)..'][!SetOption LevelRange X '..(130 + levelMin * 95)..'][!SetOption LevelRange W '..(levelRange * 95)..'][!SetOption LevelMinSlider X '..(128 + levelMin * 95)..'][!SetOption LevelMaxSlider X '..(128 + (levelMin + levelRange) * 95)..'][!SetOption SensSlider X '..(95 + tonumber(SKIN:GetVariable('Sens')) * 0.9)..'][!SetOption BG'..(showBG and 'Show' or 'Hide')..' SolidColor FF0000][!SetOption BG'..(showBG and 'Show' or 'Hide')..' MouseLeaveAction "!SetOption #*CURRENTSECTION*# SolidColor FF0000"]')
+    if not showBG then
+        SKIN:Bang('[!HideMeterGroup Mask][!SetOption ColorLabel Y -20]')
+    end
+    if SKIN:GetVariable('ShowSet') ~= '' then
         ShowSettings()
         SKIN:Bang('!WriteKeyValue Variables ShowSet "" "#@#Settings.inc"')
     end
@@ -41,7 +45,7 @@ function ShowHover()
 end
 
 function ShowSettings()
-    SKIN:Bang('[!SetOption Handle W '..math.max(SKIN:GetMeter('BG'):GetW(), 270)..'][!MoveMeter 12 12 PresetLabel][!MoveMeter 66 12 PresetBG][!MoveMeter 83 61 ChannelBG][!ShowMeterGroup Set][!SetOption Hover SolidColor 00000001]')
+    SKIN:Bang('[!SetOption Handle W '..math.max(SKIN:GetMeter('Hover'):GetW(), 270)..'][!MoveMeter 12 12 PresetLabel][!MoveMeter 66 12 PresetBG][!MoveMeter 83 137 ChannelBG][!ShowMeterGroup Set][!SetOption Hover SolidColor 00000001]')
 end
 
 function HideSettings()
@@ -79,18 +83,18 @@ end
 
 function InitScroll()
     presetCount = SKIN:GetMeasure('mPresetCount'):GetValue()
-    SKIN:GetMeter('PresetScroll'):SetH(math.min(148, 1216 / presetCount - 4))
+    SKIN:GetMeter('PresetScroll'):SetH(math.min(186, 1900 / presetCount - 4))
 end
 
 function ScrollList(n, m)
     if m then
-        local n = m * 0.01 > (scroll + 4) / presetCount and 1 or -1
+        local n = m * 0.01 > (scroll + 5) / presetCount and 1 or -1
         for i = 1, 3 do
             ScrollList(n)
         end
-    elseif scroll + n >= 0 and scroll + n + 8 <= presetCount then
+    elseif scroll + n >= 0 and scroll + n + 10 <= presetCount then
         scroll = scroll + n
-        SKIN:Bang('[!SetOption PresetScroll Y '..(152 / (presetCount - 8) * (1 - 8 / presetCount) * scroll + 2)..'r][!UpdateMeter PresetScroll][!CommandMeasure mPreset1 Index'..(n > 0 and 'Down' or 'Up')..']')
+        SKIN:Bang('[!SetOption PresetScroll Y '..(190 / (presetCount - 10) * (1 - 10 / presetCount) * scroll + 2)..'r][!UpdateMeter PresetScroll][!CommandMeasure mPreset1 Index'..(n > 0 and 'Down' or 'Up')..']')
     end
 end
 
@@ -102,7 +106,7 @@ function SetAttack(n, m)
         attack = math.floor((attack + n) * 0.01 + 0.5) * 100
     else return end
     SKIN:GetMeter('AttackSlider'):SetX(68 + attack * 0.09)
-    SKIN:Bang('[!SetOptionGroup mFFT FFTAttack '..attack..'][!SetOption AttackVal Text '..attack..'][!SetVariable Attack '..attack..'][!WriteKeyValue Variables Attack '..attack..' "#@#Settings.inc"]')
+    SKIN:Bang('[!SetOption mFFT0 FFTAttack '..attack..'][!SetOption AttackVal Text '..attack..'][!SetVariable Attack '..attack..'][!WriteKeyValue Variables Attack '..attack..' "#@#Settings.inc"]')
 end
 
 function SetDecay(n, m)
@@ -113,7 +117,7 @@ function SetDecay(n, m)
         decay = math.floor((decay + n) * 0.01 + 0.5) * 100
     else return end
     SKIN:GetMeter('DecaySlider'):SetX(62 + decay * 0.09)
-    SKIN:Bang('[!SetOptionGroup mFFT FFTDecay '..decay..'][!SetOption DecayVal Text '..decay..'][!SetVariable Decay '..decay..'][!WriteKeyValue Variables Decay '..decay..' "#@#Settings.inc"]')
+    SKIN:Bang('[!SetOption mFFT0 FFTDecay '..decay..'][!SetOption DecayVal Text '..decay..'][!SetVariable Decay '..decay..'][!WriteKeyValue Variables Decay '..decay..' "#@#Settings.inc"]')
 end
 
 function SetLevel(n, m)
@@ -147,7 +151,7 @@ function SetSens(n, m)
         sens = math.floor((sens + n) * 0.1 + 0.5) * 10
     else return end
     SKIN:GetMeter('SensSlider'):SetX(95 + sens * 0.9)
-    SKIN:Bang('[!SetOptionGroup mFFT Sensitivity '..sens..'][!SetOption SensVal Text '..sens..'][!SetVariable Sens '..sens..'][!WriteKeyValue Variables Sens '..sens..' "#@#Settings.inc"]')
+    SKIN:Bang('[!SetOption mFFT0 Sensitivity '..sens..'][!SetOption SensVal Text '..sens..'][!SetVariable Sens '..sens..'][!WriteKeyValue Variables Sens '..sens..' "#@#Settings.inc"]')
 end
 
 function SetChannel(n)
@@ -155,18 +159,18 @@ function SetChannel(n)
     if n == 'Stereo' then
         -- Split bands between L and R channels
         for b = 0, bands / 2 - 1 do
-            SKIN:Bang('!SetOption mFFT'..b..' Channel L')
+            SKIN:Bang('[!SetOption mFFT'..b..' Channel L][!SetOption mFFT'..b..' BandIdx '..(bands - b * 2 - 2)..']')
         end
         for b = bands / 2, bands - 1 do
-            SKIN:Bang('[!SetOption mFFT'..b..' Channel R][!SetOption mFFT'..b..' BandIdx '..(bands - b)..']')
+            SKIN:Bang('[!SetOption mFFT'..b..' Channel R][!SetOption mFFT'..b..' BandIdx '..(b * 2 - bands - 2)..']')
         end
     else
         SKIN:Bang('!SetOptionGroup mFFT Channel '..n)
-        for b = bands / 2, bands - 1 do
+        for b = 0, bands - 1 do
             SKIN:Bang('!SetOption mFFT'..b..' BandIdx '..b)
         end
     end
-    SKIN:Bang('[!SetOption ChannelSet Text "'..(name[n] or n)..'"][!SetVariable Channel '..n..'][!WriteKeyValue Variables Channel '..n..' "#@#Settings.inc"]')
+    SKIN:Bang('[!SetOption ChannelSet Text "'..(name[tonumber(n)] or n)..'"][!SetVariable Channel '..n..'][!WriteKeyValue Variables Channel '..n..' "#@#Settings.inc"]')
 end
 
 function SetBands()
@@ -175,6 +179,15 @@ function SetBands()
     if res and res > 0 then
         SKIN:Bang('[!WriteKeyValue Variables Bands '..res..' "#@#Settings.inc"][!WriteKeyValue Variables ShowSet 1 "#@#Settings.inc"][!Refresh]')
     end
+end
+
+function SetOrder(n, m)
+    if tonumber(n) ~= tonumber(SKIN:GetVariable('Order')) or m and n then
+        for b = 0, bands / 2 - 1 do
+            mFFT[b], mFFT[bands - b - 1] = mFFT[bands - b - 1], mFFT[b]
+        end
+    end
+    SKIN:Bang('[!SetOption Order'..(n and 'Right' or 'Left')..' SolidColor 505050E0][!SetOption Order'..(n and 'Right' or 'Left')..' MouseLeaveAction "!SetOption #*CURRENTSECTION*# SolidColor 505050E0"][!SetOption Order'..(n and 'Left' or 'Right')..' SolidColor FF0000][!SetOption Order'..(n and 'Left' or 'Right')..' MouseLeaveAction "!SetOption #*CURRENTSECTION*# SolidColor FF0000"][!SetVariable Order '..(n and 1 or '""')..'][!WriteKeyValue Variables Order '..(n and 1 or '""')..' "#@#Settings.inc"]')
 end
 
 function SetBandSize(s)
@@ -191,6 +204,10 @@ function SetMaskH()
     if maskH and maskH > 0 then
         SKIN:Bang('[!SetOption MaskHSet Text "#Set#"][!SetVariable MaskH "#Set#"][!WriteKeyValue Variables MaskH "#Set#" "#@#Settings.inc"][!UpdateMeterGroup Mask]')
     end
+end
+
+function SetBG(n)
+    SKIN:Bang('[!'..(n and 'Show' or 'Hide')..'MeterGroup Mask][!SetOption BG'..(n and 'Hide' or 'Show')..' SolidColor 505050E0][!SetOption BG'..(n and 'Hide' or 'Show')..' MouseLeaveAction "!SetOption #*CURRENTSECTION*# SolidColor 505050E0"][!SetOption BG'..(n and 'Show' or 'Hide')..' SolidColor FF0000][!SetOption BG'..(n and 'Show' or 'Hide')..' MouseLeaveAction "!SetOption #*CURRENTSECTION*# SolidColor FF0000"][!SetOption ColorLabel Y '..(n and '6R' or -20)..'][!WriteKeyValue Variables ShowBG '..(n or '""')..' "#@#Settings.inc"]')
 end
 
 function SetColor()

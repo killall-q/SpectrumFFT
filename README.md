@@ -1,8 +1,12 @@
 # SpectrumFFT
 ###### for [Rainmeter](https://www.rainmeter.net/)
-Displays audio FFT as blended color bands.
+Displays audio FFT using color gradients.
 
-Choose from 18 preset color schemes or create your own.
+## Features
+
+* Choose from 19 preset color schemes or create your own
+
+###### [Full description and download](https://www.deviantart.com/killall-q/art/SpectrumFFT-907830283)
 
 ---
 
@@ -14,7 +18,7 @@ SpectrumFFT displays the volume level of each audio frequency as a color from a 
 
 If a color scheme you make is interesting and unique enough, I'll include it as a default preset in SpectrumFFT!
 
-If you have cannot understand how to create a color scheme function, you can give me a list of color stops and their percentage positions, and I can create it for you.
+If you can't figure out how to create a color scheme function, you can give me a list of color stops and their percentage positions, and I can create it for you.
 
 ### Getting Started
 
@@ -73,7 +77,7 @@ else
     return ((v - 0.4) * 638)..','..((v - 0.8) * 1275)..','..((v - 0.8) * -638)
 end
 ```
-It is easier to understand in the non-compact form:
+It is easier to understand in expanded form:
 ```lua
 local v = ...
 
@@ -104,6 +108,6 @@ For example, to blend the red channel from 0 to 255 for range of v = 0.4 to v = 
 ```
 (v - 0.4) * (255 / 0.4) + 0 = (v - 0.4) * 638
 ```
-This formula only covers linear blending. For smoother blending curves, adapt formulas from HoloFFT's tutorial. However, in my experience, linear blending is often sufficient.
+This formula only covers linear blending. For smoother blending curves, adapt formulas from [HoloFFT's tutorial](https://github.com/killall-q/HoloFFT#value-scaling). However, in my experience, linear blending is usually sufficient.
 
 Color channel values below 0 are equivalent to 0 and values above 255 are equivalent to 255, so functions don't need to attempt to clamp values to the valid range.
