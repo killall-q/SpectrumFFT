@@ -25,7 +25,7 @@ function Initialize()
     end
     SKIN:Bang('[!SetOption B'..bands..' SolidColor2 0,0,0,0][!SetOption AttackSlider X '..(68 + tonumber(SKIN:GetVariable('Attack')) * 0.09)..'][!SetOption DecaySlider X '..(62 + tonumber(SKIN:GetVariable('Decay')) * 0.09)..'][!SetOption LevelRange X '..(130 + levelMin * 95)..'][!SetOption LevelRange W '..(levelRange * 95)..'][!SetOption LevelMinSlider X '..(128 + levelMin * 95)..'][!SetOption LevelMaxSlider X '..(128 + (levelMin + levelRange) * 95)..'][!SetOption SensSlider X '..(95 + tonumber(SKIN:GetVariable('Sens')) * 0.9)..'][!SetOption BG'..(showBG and 'Show' or 'Hide')..' SolidColor FF0000][!SetOption BG'..(showBG and 'Show' or 'Hide')..' MouseLeaveAction "!SetOption #*CURRENTSECTION*# SolidColor FF0000"]')
     if not showBG then
-        SKIN:Bang('[!HideMeterGroup Mask][!SetOption ColorLabel Y -20]')
+        SKIN:Bang('[!HideMeterGroup Mask][!SetOption ColorLabel Y -50]')
     end
     if SKIN:GetVariable('ShowSet') ~= '' then
         ShowSettings()
@@ -198,20 +198,20 @@ function SetBandSize(s)
     end
 end
 
-function SetMaskH()
-    lock = false
-    local maskH = tonumber(SKIN:GetVariable('Set'))
-    if maskH and maskH > 0 then
-        SKIN:Bang('[!SetOption MaskHSet Text "#Set#"][!SetVariable MaskH "#Set#"][!WriteKeyValue Variables MaskH "#Set#" "#@#Settings.inc"][!UpdateMeterGroup Mask]')
-    end
-end
-
 function SetBG(n)
-    SKIN:Bang('[!'..(n and 'Show' or 'Hide')..'MeterGroup Mask][!SetOption BG'..(n and 'Hide' or 'Show')..' SolidColor 505050E0][!SetOption BG'..(n and 'Hide' or 'Show')..' MouseLeaveAction "!SetOption #*CURRENTSECTION*# SolidColor 505050E0"][!SetOption BG'..(n and 'Show' or 'Hide')..' SolidColor FF0000][!SetOption BG'..(n and 'Show' or 'Hide')..' MouseLeaveAction "!SetOption #*CURRENTSECTION*# SolidColor FF0000"][!SetOption ColorLabel Y '..(n and '6R' or -20)..'][!WriteKeyValue Variables ShowBG '..(n or '""')..' "#@#Settings.inc"]')
+    SKIN:Bang('[!'..(n and 'Show' or 'Hide')..'MeterGroup Mask][!SetOption BG'..(n and 'Hide' or 'Show')..' SolidColor 505050E0][!SetOption BG'..(n and 'Hide' or 'Show')..' MouseLeaveAction "!SetOption #*CURRENTSECTION*# SolidColor 505050E0"][!SetOption BG'..(n and 'Show' or 'Hide')..' SolidColor FF0000][!SetOption BG'..(n and 'Show' or 'Hide')..' MouseLeaveAction "!SetOption #*CURRENTSECTION*# SolidColor FF0000"][!SetOption ColorLabel Y '..(n and '6R' or -50)..'][!WriteKeyValue Variables ShowBG '..(n or '""')..' "#@#Settings.inc"]')
 end
 
 function SetColor()
     lock = false
     if SKIN:GetVariable('Set') == '' then return end
     SKIN:Bang('[!SetOptionGroup Mask SolidColor "#Set#"][!SetOption ColorBGSet Text "#Set#"][!SetVariable ColorBG "#Set#"][!WriteKeyValue Variables ColorBG "#Set#" "#@#Settings.inc"][!UpdateMeterGroup Mask]')
+end
+
+function SetMaskH()
+    lock = false
+    local maskH = tonumber(SKIN:GetVariable('Set'))
+    if maskH and maskH > 0 then
+        SKIN:Bang('[!SetOption MaskHSet Text "#Set#"][!SetVariable MaskH "#Set#"][!WriteKeyValue Variables MaskH "#Set#" "#@#Settings.inc"][!UpdateMeterGroup Mask]')
+    end
 end
