@@ -187,7 +187,7 @@ function SetOrder(n, m)
             mFFT[b], mFFT[bands - b - 1] = mFFT[bands - b - 1], mFFT[b]
         end
     end
-    SKIN:Bang('[!SetOption Order'..(n and 'Right' or 'Left')..' SolidColor 505050E0][!SetOption Order'..(n and 'Right' or 'Left')..' MouseLeaveAction "!SetOption #*CURRENTSECTION*# SolidColor 505050E0"][!SetOption Order'..(n and 'Left' or 'Right')..' SolidColor FF0000][!SetOption Order'..(n and 'Left' or 'Right')..' MouseLeaveAction "!SetOption #*CURRENTSECTION*# SolidColor FF0000"][!SetVariable Order '..(n and 1 or '""')..'][!WriteKeyValue Variables Order '..(n and 1 or '""')..' "#@#Settings.inc"]')
+    SKIN:Bang('[!SetOption Order'..(n and '0' or '1')..' SolidColor 505050E0][!SetOption Order'..(n and '0' or '1')..' MouseLeaveAction "!SetOption #*CURRENTSECTION*# SolidColor 505050E0"][!SetOption Order'..(n and '1' or '0')..' SolidColor FF0000][!SetOption Order'..(n and '1' or '0')..' MouseLeaveAction "!SetOption #*CURRENTSECTION*# SolidColor FF0000"][!SetVariable Order '..(n and 1 or '""')..'][!WriteKeyValue Variables Order '..(n and 1 or '""')..' "#@#Settings.inc"]')
 end
 
 function SetBandSize(s)
