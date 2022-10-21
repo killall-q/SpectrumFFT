@@ -6,12 +6,10 @@ LevelMax=0.85
 Sens=80
 Channel=Sum
 Bands=128
-Order=
-BandH=40
-BandW=3
+Width=360
+Height=40
 MaskH=5
-ShowBG=
-ShowSet=
+Angle=0
+ShowSet=0
 
 Preset=Lava
-ColorBG=000000

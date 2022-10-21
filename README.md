@@ -4,7 +4,7 @@ Displays audio FFT using color gradients.
 
 ## Features
 
-* Choose from 19 preset color schemes or create your own
+* Choose from 20 preset color schemes or create your own
 
 ###### [Full description and download](https://www.deviantart.com/killall-q/art/SpectrumFFT-907830283)
 
@@ -49,11 +49,11 @@ SKIN:Bang('!SetVariable Color'..b..' '..Preset((mFFT[b]:GetValue() - levelMin) /
 
 Functions are restricted to the use of these input variables:
 
-* __v__  
+* __v__
 value of FFT at current band and row, ranging from 0 to 1
-* __b__  
+* __b__
 number of current band, ranging from 0 to (bands - 1), usually unused
-* __bands__  
+* __bands__
 total number of bands, usually unused
 
 Additionally, you can use any built-in [Lua 5.1 functions](http://www.lua.org/manual/5.1/#index). Global variables and external Lua libraries cannot be used. Rainmeter [variables](https://docs.rainmeter.net/manual/lua-scripting/#GetVariable) and measure values are allowed.
