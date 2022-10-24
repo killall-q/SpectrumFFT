@@ -4,7 +4,7 @@ Displays audio FFT using color gradients.
 
 ## Features
 
-* Choose from 20 preset color schemes or create your own
+* Choose from 21 preset color schemes or create your own
 
 ###### [Full description and download](https://www.deviantart.com/killall-q/art/SpectrumFFT-907830283)
 

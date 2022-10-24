@@ -29,7 +29,7 @@ function Update()
   for b = 1, bands do
     grad[b + 1] = Preset((mFFT[b - 1]:GetValue() - levelMin) / levelRange, b, bands)..';'..(bandPct * b)
   end
-  SKIN:Bang('!SetOption', 'Row', 'Grad', '180|'..table.concat(grad, '|')..'|'..Preset(0, bands, bands)..';1')
+  SKIN:Bang('!SetOption', 'Row', 'Grad', '180|'..table.concat(grad, '|'))
 end
 
 function ShowHover()
@@ -64,7 +64,7 @@ function LoadPreset(n)
   end
   -- Create function from file
   Preset = assert(loadfile(SKIN:GetVariable('@')..'Presets\\'..file..'.lua'))
-  grad = {Preset(0, 0, bands)..';0'}
+  grad = {Preset(0, 0, bands)..';0', [bands + 2] = Preset(0, bands, bands)..';1'}
 end
 
 function InitScroll()
@@ -78,7 +78,7 @@ function ScrollList(n, m)
     for i = 1, 3 do
       ScrollList(n)
     end
-  elseif scroll + n >= 0 and scroll + n + 10 <= presetCount then
+  elseif 0 <= scroll + n and scroll + n + 10 <= presetCount then
     scroll = scroll + n
     SKIN:Bang('[!SetOption PresetScroll Y '..(190 / (presetCount - 10) * (1 - 10 / presetCount) * scroll + 2)..'r][!UpdateMeter PresetScroll][!CommandMeasure mPreset1 Index'..(n > 0 and 'Down' or 'Up')..']')
   end
@@ -88,7 +88,7 @@ function SetAttack(n, m)
   local attack = tonumber(SKIN:GetVariable('Attack'))
   if m then
     attack = math.floor(m * 0.11) * 100
-  elseif attack + n >= 0 and attack + n <= 1000 then
+  elseif 0 <= attack + n and attack + n <= 1000 then
     attack = math.floor((attack + n) * 0.01 + 0.5) * 100
   else return end
   SKIN:Bang('[!SetOption mFFT0 FFTAttack '..attack..'][!SetOption AttackSlider X '..(attack * 0.09)..'r][!SetOption AttackVal Text '..attack..'][!SetVariable Attack '..attack..'][!WriteKeyValue Variables Attack '..attack..' "#@#Settings.inc"]')
@@ -98,7 +98,7 @@ function SetDecay(n, m)
   local decay = tonumber(SKIN:GetVariable('Decay'))
   if m then
     decay = math.floor(m * 0.11) * 100
-  elseif decay + n >= 0 and decay + n <= 1000 then
+  elseif 0 <= decay + n and decay + n <= 1000 then
     decay = math.floor((decay + n) * 0.01 + 0.5) * 100
   else return end
   SKIN:Bang('[!SetOption mFFT0 FFTDecay '..decay..'][!SetOption DecaySlider X '..(decay * 0.09)..'r][!SetOption DecayVal Text '..decay..'][!SetVariable Decay '..decay..'][!WriteKeyValue Variables Decay '..decay..' "#@#Settings.inc"]')
@@ -110,7 +110,7 @@ function SetLevel(n, m)
   local val = 0
   if n == 0 then
     val = math.floor(m * 0.21) * 0.05
-  elseif level[limit] + n >= 0 and level[limit] + n <= 1 then
+  elseif 0 <= level[limit] + n and level[limit] + n <= 1 then
     val = math.floor((level[limit] + n) * 20 + 0.5) * 0.05
   end
   if (limit == 'Min' and level.Max - 0.01 <= val) or (limit == 'Max' and val <= level.Min + 0.01) then return end
@@ -128,7 +128,7 @@ function SetSens(n, m)
   local sens = tonumber(SKIN:GetVariable('Sens'))
   if m then
     sens = math.floor(m * 0.11) * 10
-  elseif sens + n >= 0 and sens + n <= 100 then
+  elseif 0 <= sens + n and sens + n <= 100 then
     sens = math.floor((sens + n) * 0.1 + 0.5) * 10
   else return end
   SKIN:Bang('[!SetOption mFFT0 Sensitivity '..sens..'][!SetOption SensSlider X '..(sens * 0.09)..'r][!SetOption SensVal Text '..sens..'][!SetVariable Sens '..sens..'][!WriteKeyValue Variables Sens '..sens..' "#@#Settings.inc"]')
@@ -155,34 +155,27 @@ end
 
 function SetBands()
   isLocked = false
-  local res = tonumber(SKIN:GetVariable('Set'))
-  if not res or res < 2 then return end
-  SKIN:Bang('[!WriteKeyValue Variables Bands '..res..' "#@#Settings.inc"][!WriteKeyValue Variables ShowSet 1 "#@#Settings.inc"][!Refresh]')
+  local set = tonumber(SKIN:GetVariable('Set'))
+  if not set or set < 2 then return end
+  SKIN:Bang('[!WriteKeyValue Variables Bands #Set# "#@#Settings.inc"][!WriteKeyValue Variables ShowSet 1 "#@#Settings.inc"][!Refresh]')
 end
 
-function SetSize(s)
+function SetVar(var)
   isLocked = false
-  local size = tonumber(SKIN:GetVariable('Set'))
-  if not size or size <= 0 then return end
-  SKIN:Bang('[!SetOption '..s..'Set Text "#Set# px"][!SetVariable '..s..' "#Set#"][!WriteKeyValue Variables '..s..' "#Set#" "#@#Settings.inc"]')
+  local set = tonumber(SKIN:GetVariable('Set'))
+  if not set or var ~= 'BlurH' and set <= 0 or set < 0 then return end
+  SKIN:Bang('[!SetOption '..var..'Set Text "#Set# px"][!SetVariable '..var..' #Set#][!WriteKeyValue Variables '..var..' #Set# "#@#Settings.inc"]')
   SetAngle(0)
-end
-
-function SetMaskH()
-  isLocked = false
-  local maskH = tonumber(SKIN:GetVariable('Set'))
-  if not maskH or maskH < 0 then return end
-  SKIN:Bang('[!SetOption Mask Grad 90|00000000;0|000000;(#Set#/#Height#)|000000;((#Height#-#Set#)/#Height#)|00000000;1][!SetOption MaskHSet Text "#Set# px"][!SetVariable MaskH "#Set#"][!WriteKeyValue Variables MaskH "#Set#" "#@#Settings.inc"]')
 end
 
 function SetAngle(n, m)
   local angle = tonumber(SKIN:GetVariable('Angle'))
   if m then
     angle = math.floor(m * 0.04) * 90
-  elseif angle + n >= 0 and angle + n <= 270 then
+  elseif 0 <= angle + n and angle + n <= 270 then
     angle = math.floor((angle + n) / 90 + 0.5) * 90
   else return end
   local isVertical = angle % 180 == 90
   local offset = isVertical and '((#Height#-#Width#)/2),((#Width#-#Height#)/2)' or '0,0'
-  SKIN:Bang('[!SetOption Row Shape "Rectangle 0,0,#Width#,#Height#|Fill LinearGradient Grad|StrokeWidth 0|Rotate '..angle..'|Offset '..offset..'"][!SetOption Mask Shape "Rectangle 0,0,#Width#,#Height#|Fill LinearGradient Grad|StrokeWidth 0|Rotate '..angle..'|Offset '..offset..'"][!SetOption Hover W '..(isVertical and '#Height#' or '#Width#')..'][!SetOption Hover H '..(isVertical and '#Width#' or '#Height#')..'][!SetOption AngleSlider X '..(angle / 9)..'r][!SetOption AngleVal Text '..angle..'\176][!SetVariable Angle '..angle..'][!WriteKeyValue Variables Angle '..angle..' "#@#Settings.inc"]')
+  SKIN:Bang('[!SetOption Row Shape "Rectangle 0,0,#Width#,#Height#|Fill LinearGradient Grad|StrokeWidth 0|Rotate '..angle..'|Offset '..offset..'"][!SetOption Mask Shape "Rectangle 0,0,#Width#,#Height#|Fill LinearGradient Grad|StrokeWidth 0|Rotate '..angle..'|Offset '..offset..'"][!SetOption Mask Grad 90|00000000;0|000000;(#BlurH#<#Height#/2?#BlurH#/#Height#:0.5)|000000;(#BlurH#<#Height#/2?(#Height#-#BlurH#)/#Height#:0.5)|00000000;1][!SetOption Hover W '..(isVertical and '#Height#' or '#Width#')..'][!SetOption Hover H '..(isVertical and '#Width#' or '#Height#')..'][!SetOption AngleSlider X '..(angle / 9)..'r][!SetOption AngleVal Text '..angle..'\176][!SetVariable Angle '..angle..'][!WriteKeyValue Variables Angle '..angle..' "#@#Settings.inc"]')
 end

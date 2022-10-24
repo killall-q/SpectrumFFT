@@ -8,7 +8,7 @@ Channel=Sum
 Bands=128
 Width=360
 Height=40
-MaskH=5
+BlurH=5
 Angle=0
 ShowSet=0
 
